@@ -4,7 +4,7 @@
 
 ## Install with npm
 
-Install the [Vercel CLI](https://vercel.com/docs/cli) first, then install `vcm` from npm:
+Install the [Vercel CLI](https://vercel.com/docs/cli) first, then install [`vercel-account-manager` from npm](https://www.npmjs.com/package/vercel-account-manager):
 
 ```sh
 npm install -g vercel
@@ -119,3 +119,11 @@ sh tests/run.sh
 ```
 
 The test uses a fake `vercel` command; it does not access your accounts.
+
+## Contributing
+
+Bug reports and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, tests, and contribution guidelines.
+
+## License
+
+MIT. See [LICENSE](LICENSE).

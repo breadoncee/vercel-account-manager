@@ -1,7 +1,8 @@
 {
   "name": "vercel-account-manager",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Switch Vercel CLI accounts and teams with project-specific defaults",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/breadoncee/vercel-account-manager.git"
@@ -16,7 +17,8 @@
   },
   "files": [
     "bin/vcm",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "os": [
     "darwin",
