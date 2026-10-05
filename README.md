@@ -4,14 +4,14 @@
 
 ## Install with npm
 
-Install the [Vercel CLI](https://vercel.com/docs/cli) first. Once this repository is on GitHub, people can install `vcm` directly from it:
+Install the [Vercel CLI](https://vercel.com/docs/cli) first, then install `vcm` from npm:
 
 ```sh
 npm install -g vercel
-npm install -g github:YOUR_USERNAME/vercel-account-manager
+npm install -g vercel-account-manager
 ```
 
-Replace `YOUR_USERNAME` with the GitHub owner. The package exposes the `vcm` command on macOS and Linux. It is not published to the npm registry yet, so `npm install -g vercel-account-manager` will not work until it is published there.
+The package exposes the `vcm` command on macOS and Linux. You can also install directly from [GitHub](https://github.com/breadoncee/vercel-account-manager) with `npm install -g github:breadoncee/vercel-account-manager`.
 
 ## Install from a clone
 

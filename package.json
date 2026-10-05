@@ -2,6 +2,15 @@
   "name": "vercel-account-manager",
   "version": "0.1.0",
   "description": "Switch Vercel CLI accounts and teams with project-specific defaults",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/breadoncee/vercel-account-manager.git"
+  },
+  "homepage": "https://github.com/breadoncee/vercel-account-manager#readme",
+  "bugs": "https://github.com/breadoncee/vercel-account-manager/issues",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  },
   "bin": {
     "vcm": "bin/vcm"
   },
