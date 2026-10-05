@@ -25,8 +25,11 @@ usage() {
   cat <<'EOF'
 Usage:
   vcm add NAME [--default | CONFIG_DIR]  Add an account and make it the global default
+  vcm rename OLD_NAME NEW_NAME            Rename a saved account label
+  vcm account remove NAME                 Unregister an account label
   vcm use NAME [TEAM]                    Set account/team for the current project
   vcm use --global NAME [TEAM]           Set the global default account/team
+  vcm default [NAME [TEAM]]              Show or set the global default account/team
   vcm team [TEAM]                        Set the team for the current context
   vcm team --global [TEAM]               Set the global default account's team
   vcm teams                              List teams for the effective account
@@ -39,6 +42,9 @@ Usage:
 Examples:
   vcm add personal --default             Keep your existing Vercel login
   vcm add work                           Log in once and save the work account
+  vcm rename work client                  Rename work without logging in again
+  vcm account remove client               Unregister client from vcm
+  vcm default personal                    Quickly select the global default
   vcm use --global personal              Set the fallback account
   vcm use work my-team                   Pin this project to work/my-team
   vcm status                             See which config is in effect
@@ -186,6 +192,17 @@ select_account() {
   printf 'Global default account: %s.\n' "$1"
 }
 
+set_global_account() {
+  name=$1
+  target_team=${2:-}
+  read_profile "$name"
+  if [ -n "$target_team" ]; then
+    valid_team "$target_team" || die "invalid team: $target_team"
+    invoke_vercel switch "$target_team"
+  fi
+  select_account "$name"
+}
+
 case ${1:-} in
   add)
     [ "$#" -ge 2 ] && [ "$#" -le 3 ] || die 'usage: vcm add NAME [--default | CONFIG_DIR]'
@@ -210,6 +227,52 @@ case ${1:-} in
     fi
     select_account "$name"
     ;;
+  rename)
+    [ "$#" -eq 3 ] || die 'usage: vcm rename OLD_NAME NEW_NAME'
+    old_name=$2
+    new_name=$3
+    old_profile=$(profile_path "$old_name")
+    new_profile=$(profile_path "$new_name")
+    [ -f "$old_profile" ] || die "unknown account '$old_name'; run 'vcm list'"
+    [ ! -e "$new_profile" ] && [ ! -L "$new_profile" ] || die "account '$new_name' already exists"
+    find_project_file
+    if [ -n "$project_file" ]; then
+      read_project_file
+    fi
+    mv "$old_profile" "$new_profile"
+    if [ -f "$active_file" ]; then
+      IFS= read -r current < "$active_file" || die 'cannot read selected account'
+      if [ "$current" = "$old_name" ]; then
+        temp_file=$active_file.tmp.$$
+        printf '%s\n' "$new_name" > "$temp_file"
+        mv "$temp_file" "$active_file"
+      fi
+    fi
+    if [ -n "$project_file" ] && [ "$project_account" = "$old_name" ]; then
+      write_project_file "$project_file" "$new_name" "$project_team"
+    fi
+    printf 'Renamed %s to %s.\n' "$old_name" "$new_name"
+    ;;
+  account)
+    [ "$#" -eq 3 ] && [ "$2" = remove ] || die 'usage: vcm account remove NAME'
+    name=$3
+    profile_file=$(profile_path "$name")
+    [ -f "$profile_file" ] || die "unknown account '$name'; run 'vcm list'"
+    was_active=0
+    if [ -f "$active_file" ]; then
+      IFS= read -r current < "$active_file" || die 'cannot read selected account'
+      [ "$current" != "$name" ] || was_active=1
+    fi
+    rm "$profile_file"
+    if [ "$was_active" -eq 1 ]; then
+      rm "$active_file"
+    fi
+    printf 'Removed %s from vcm.\n' "$name"
+    if [ "$was_active" -eq 1 ]; then
+      printf "No global default selected. Run 'vcm default NAME' to choose another.\n"
+    fi
+    printf 'Vercel login files were kept. Update any .vcmrc files that use this name.\n'
+    ;;
   login)
     [ "$#" -le 2 ] || die 'usage: vcm login [NAME]'
     if [ "$#" -eq 2 ]; then
@@ -222,14 +285,7 @@ case ${1:-} in
   use)
     if [ "${2:-}" = --global ]; then
       [ "$#" -ge 3 ] && [ "$#" -le 4 ] || die 'usage: vcm use --global NAME [TEAM]'
-      name=$3
-      target_team=${4:-}
-      read_profile "$name"
-      if [ -n "$target_team" ]; then
-        valid_team "$target_team" || die "invalid team: $target_team"
-        invoke_vercel switch "$target_team"
-      fi
-      select_account "$name"
+      set_global_account "$3" "${4:-}"
     else
       [ "$#" -ge 2 ] && [ "$#" -le 3 ] || die 'usage: vcm use NAME [TEAM]'
       name=$2
@@ -239,6 +295,15 @@ case ${1:-} in
       project_file=$(pwd -P)/.vcmrc
       write_project_file "$project_file" "$name" "$target_team"
       printf 'Project config: %s\n' "$project_file"
+    fi
+    ;;
+  default)
+    [ "$#" -le 3 ] || die 'usage: vcm default [NAME [TEAM]]'
+    if [ "$#" -eq 1 ]; then
+      selected_global_account
+      printf '%s\n' "$account"
+    else
+      set_global_account "$2" "${3:-}"
     fi
     ;;
   list)

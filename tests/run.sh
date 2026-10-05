@@ -79,6 +79,62 @@ actual=$(cat "$MOCK_VERCEL_LOG")
   printf 'Unexpected Vercel command routing:\n%s\n' "$actual" >&2
   exit 1
 }
+vcm remove old-deployment >/dev/null
+case $(tail -n 1 "$MOCK_VERCEL_LOG") in
+  "[<--global-config><$VCM_HOME/auth/work><--scope><team-three><remove><old-deployment>]") ;;
+  *) printf 'Expected Vercel remove to pass through.\n' >&2; exit 1 ;;
+esac
+
+if vcm rename work personal >/dev/null 2>&1; then
+  printf 'Expected rename to reject an existing account name.\n' >&2
+  exit 1
+fi
+if vcm rename work 'invalid name' >/dev/null 2>&1; then
+  printf 'Expected rename to reject an invalid account name.\n' >&2
+  exit 1
+fi
+vcm rename work client >/dev/null
+[ "$(vcm current)" = client ]
+[ "$(vcm current --global)" = client ]
+[ "$(cat ../.vcmrc)" = "$(printf 'account=client\nteam=team-three')" ]
+[ "$(cat "$VCM_HOME/profiles/client")" = "$VCM_HOME/auth/work" ]
+[ ! -e "$VCM_HOME/profiles/work" ]
+vcm deploy >/dev/null
+case $(tail -n 1 "$MOCK_VERCEL_LOG") in
+  "[<--global-config><$VCM_HOME/auth/work><--scope><team-three><deploy>]") ;;
+  *) printf 'Expected renamed account to keep its Vercel login.\n' >&2; exit 1 ;;
+esac
+vcm default personal team-six >/dev/null
+[ "$(vcm default)" = personal ]
+[ "$(vcm current)" = client ]
+case $(tail -n 1 "$MOCK_VERCEL_LOG") in
+  '[<switch><team-six>]') ;;
+  *) printf 'Expected default to switch the selected account team.\n' >&2; exit 1 ;;
+esac
+if vcm default missing >/dev/null 2>&1; then
+  printf 'Expected default to reject an unknown account.\n' >&2
+  exit 1
+fi
+[ "$(vcm default)" = personal ]
+vcm default client >/dev/null
+[ "$(vcm default)" = client ]
+
+if vcm account remove missing >/dev/null 2>&1; then
+  printf 'Expected remove to reject an unknown account.\n' >&2
+  exit 1
+fi
+vcm account remove personal >/dev/null
+[ "$(vcm default)" = client ]
+[ ! -e "$VCM_HOME/profiles/personal" ]
+vcm account remove client >/dev/null
+[ ! -e "$VCM_HOME/profiles/client" ]
+[ ! -e "$VCM_HOME/active" ]
+[ -d "$VCM_HOME/auth/work" ]
+[ "$(cat ../.vcmrc)" = "$(printf 'account=client\nteam=team-three')" ]
+if vcm default >/dev/null 2>&1; then
+  printf 'Expected no default after removing the selected account.\n' >&2
+  exit 1
+fi
 
 mkdir -p "$scratch/bad"
 printf 'account=work\naccount=personal\n' > "$scratch/bad/.vcmrc"

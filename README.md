@@ -20,7 +20,7 @@ If you are already logged in to Vercel, keep that login as `personal`. Add a sec
 ```sh
 vcm add personal --default
 vcm add work
-vcm use --global personal
+vcm default personal
 
 cd my-project
 vcm use work my-team
@@ -83,6 +83,16 @@ vcm add work "$HOME/.config/vercel-work"
 
 Use `vcm login work` if you need to refresh that account's login later.
 
+To change a saved account label without logging in again, run:
+
+```sh
+vcm rename work client
+```
+
+This updates the global default and the closest project's `.vcmrc` if either uses the old name. The Vercel login stays in its existing config directory. Update `.vcmrc` files in other projects that use the old name.
+
+To remove a saved label, run `vcm account remove client`. This unregisters it from `vcm` and clears the global default if that account was selected. It keeps the Vercel login files. Update any project `.vcmrc` files that still name the removed account, then use `vcm default NAME` to choose another global default.
+
 ## Pin an account and team to a project
 
 From the project directory, run:
@@ -111,11 +121,13 @@ Project team selection is passed to Vercel as `--scope` for each command, so it 
 Outside projects with a `.vcmrc`, `vcm` uses the global default account. Set it from anywhere with:
 
 ```sh
-vcm use --global personal
-vcm use --global work my-team
+vcm default personal
+vcm default work my-team
 ```
 
-When a team is given with `--global`, `vcm` uses Vercel's `switch` command to save that team for the account. Each account retains its own global team selection.
+Run `vcm default` to show the current global default. The existing `vcm use --global NAME [TEAM]` form also works.
+
+When a team is given with `vcm default` or `vcm use --global`, `vcm` uses Vercel's `switch` command to save that team for the account. Each account retains its own global team selection.
 
 ## Other commands
 
@@ -135,6 +147,8 @@ vcm deploy                  # Pass any other command to Vercel
 ```
 
 Vercel saves a globally selected team in that account's [global CLI configuration](https://vercel.com/docs/project-configuration/global-configuration).
+
+When `vcm teams` shows a team name that differs from its `id` column, use the value in the `id` column with `vcm team`. For example, if the row is `dfo1  DFO`, run `vcm team dfo1`; `DFO` is the display name.
 
 When working in an already linked project, check its local `.vercel/project.json` before deploying. The [project link](https://vercel.com/docs/cli/project-linking) identifies a specific Vercel project and organization; changing accounts does not change that link.
 
