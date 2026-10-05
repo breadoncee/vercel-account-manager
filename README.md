@@ -2,9 +2,20 @@
 
 `vcm` is a small account and team manager for the [Vercel CLI](https://vercel.com/docs/cli). It gives separate Vercel logins names, remembers the selected account, and passes other commands through to Vercel. Team switching uses Vercel's own `switch` command within the selected account.
 
-## Install
+## Install with npm
 
-Install the [Vercel CLI](https://vercel.com/docs/cli) first. Then clone this repository and run:
+Install the [Vercel CLI](https://vercel.com/docs/cli) first. Once this repository is on GitHub, people can install `vcm` directly from it:
+
+```sh
+npm install -g vercel
+npm install -g github:YOUR_USERNAME/vercel-account-manager
+```
+
+Replace `YOUR_USERNAME` with the GitHub owner. The package exposes the `vcm` command on macOS and Linux. It is not published to the npm registry yet, so `npm install -g vercel-account-manager` will not work until it is published there.
+
+## Install from a clone
+
+Clone this repository and run:
 
 ```sh
 ./install.sh

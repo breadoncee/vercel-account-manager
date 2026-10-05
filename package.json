@@ -1,0 +1,25 @@
+{
+  "name": "vercel-account-manager",
+  "version": "0.1.0",
+  "description": "Switch between Vercel CLI accounts and teams",
+  "bin": {
+    "vcm": "bin/vcm"
+  },
+  "files": [
+    "bin/vcm",
+    "README.md"
+  ],
+  "os": [
+    "darwin",
+    "linux"
+  ],
+  "scripts": {
+    "test": "sh tests/run.sh"
+  },
+  "keywords": [
+    "vercel",
+    "cli",
+    "account-switcher",
+    "team-switcher"
+  ]
+}
