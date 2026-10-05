@@ -1,18 +1,10 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/breadoncee/vercel-account-manager/main/assets/logo.svg" width="96" height="96" alt="vcm logo: a stack of account cards with one selected">
-</p>
+<img src="https://raw.githubusercontent.com/breadoncee/vercel-account-manager/main/assets/logo.svg" width="64" height="64" alt="vcm pixel logo">
 
-<h1 align="center">vcm</h1>
+# vcm
 
-<p align="center"><strong>One Vercel CLI. Multiple accounts and teams. The right one for every project.</strong></p>
+Manage multiple [Vercel CLI](https://vercel.com/docs/cli) accounts and teams. Set a global default, or pin an account and team to a project with `.vcmrc`.
 
-<p align="center">
-  <a href="https://www.npmjs.com/package/vercel-account-manager">npm package</a> ·
-  <a href="https://github.com/breadoncee/vercel-account-manager/releases">releases</a> ·
-  <a href="LICENSE">MIT license</a>
-</p>
-
-`vcm` gives each [Vercel CLI](https://vercel.com/docs/cli) login a name, remembers a global default, and lets a project select its own account and team. Run Vercel commands through `vcm` to use the selected context.
+[npm](https://www.npmjs.com/package/vercel-account-manager) · [Releases](https://github.com/breadoncee/vercel-account-manager/releases) · [MIT license](LICENSE)
 
 ## Quick start
 
@@ -38,9 +30,7 @@ vcm deploy
 
 The package exposes `vcm` on macOS and Linux. Replace `work`, `my-team`, and `my-project` with your names.
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/breadoncee/vercel-account-manager/main/assets/demo.gif" width="960" alt="Three-step demo: select a global personal account, pin work and a team to a project, then check status">
-</p>
+![Terminal example showing global account selection, a project account and team, and status](https://raw.githubusercontent.com/breadoncee/vercel-account-manager/main/assets/demo.gif)
 
 The project selection lives in `.vcmrc`. Other projects keep using your global default.
 

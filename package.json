@@ -1,6 +1,6 @@
 {
   "name": "vercel-account-manager",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Switch Vercel CLI accounts and teams with project-specific defaults",
   "license": "MIT",
   "repository": {
