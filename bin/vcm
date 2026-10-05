@@ -1,0 +1,198 @@
+#!/bin/sh
+# Named account profiles for the Vercel CLI.
+
+set -eu
+umask 077
+
+config_home=${XDG_CONFIG_HOME:-$HOME/.config}
+if [ -n "${VCM_HOME:-}" ]; then
+  state_dir=$VCM_HOME
+elif [ -n "${VERCEL_ACCOUNT_MANAGER_HOME:-}" ]; then
+  state_dir=$VERCEL_ACCOUNT_MANAGER_HOME
+elif [ -n "${VCA_STATE_DIR:-}" ]; then
+  state_dir=$VCA_STATE_DIR
+elif [ -d "$config_home/vercel-account-switcher" ]; then
+  state_dir=$config_home/vercel-account-switcher
+elif [ -d "$config_home/vercel-account-manager" ]; then
+  state_dir=$config_home/vercel-account-manager
+else
+  state_dir=$config_home/vcm
+fi
+profiles_dir=$state_dir/profiles
+active_file=$state_dir/active
+
+usage() {
+  cat <<'EOF'
+Usage:
+  vcm add NAME [--default | CONFIG_DIR]  Add and select an account
+  vcm login [NAME]                       Refresh a registered account's login
+  vcm use NAME [TEAM]                    Select an account, optionally its team
+  vcm list                               Show registered accounts
+  vcm current                            Show the selected account
+  vcm teams                              List teams in the selected account
+  vcm team [TEAM]                        Choose a team, or switch directly
+  vcm VERCEL_ARGS...                     Run a Vercel CLI command
+
+Examples:
+  vcm add personal --default             Keep your existing Vercel login
+  vcm add work                           Log in once and save the work account
+  vcm use work my-team                   Switch account and team together
+  vcm teams
+  vcm team                               Choose another team interactively
+  vcm whoami
+  vcm deploy
+
+For an already saved custom login, use its exact config directory:
+  vcm add work "$HOME/.config/vercel-work"
+EOF
+}
+
+die() {
+  printf 'vcm: %s\n' "$*" >&2
+  exit 1
+}
+
+valid_name() {
+  case $1 in
+    ''|*[!a-zA-Z0-9_-]*) return 1 ;;
+    *) return 0 ;;
+  esac
+}
+
+profile_path() {
+  valid_name "$1" || die "invalid account name: $1"
+  printf '%s/%s\n' "$profiles_dir" "$1"
+}
+
+read_profile() {
+  profile_file=$(profile_path "$1")
+  [ -f "$profile_file" ] || die "unknown account '$1'; run 'vcm list'"
+  IFS= read -r config_dir < "$profile_file" || die "cannot read account '$1'"
+  [ -n "$config_dir" ] || die "empty config for account '$1'"
+}
+
+selected_account() {
+  [ -f "$active_file" ] || die "no account selected; run 'vcm add NAME' then 'vcm use NAME'"
+  IFS= read -r account < "$active_file" || die 'cannot read selected account'
+  read_profile "$account"
+}
+
+invoke_vercel() {
+  if [ "$config_dir" = :default: ]; then
+    vercel "$@"
+  else
+    vercel --global-config "$config_dir" "$@"
+  fi
+}
+
+run_vercel() {
+  if [ "$config_dir" = :default: ]; then
+    exec vercel "$@"
+  else
+    exec vercel --global-config "$config_dir" "$@"
+  fi
+}
+
+select_account() {
+  mkdir -p "$state_dir"
+  printf '%s\n' "$1" > "$active_file"
+  printf 'Using %s.\n' "$1"
+}
+
+case ${1:-} in
+  add)
+    [ "$#" -ge 2 ] && [ "$#" -le 3 ] || die 'usage: vcm add NAME [--default | CONFIG_DIR]'
+    name=$2
+    profile_file=$(profile_path "$name")
+    [ ! -e "$profile_file" ] || die "account '$name' already exists"
+    mkdir -p "$profiles_dir"
+    case ${3:-} in
+      --default) config_dir=:default: ;;
+      '') config_dir=$state_dir/auth/$name; mkdir -p "$config_dir" ;;
+      /*) config_dir=$3; [ -d "$config_dir" ] || die "config directory does not exist: $config_dir" ;;
+      *) die 'CONFIG_DIR must be an absolute path' ;;
+    esac
+    printf '%s\n' "$config_dir" > "$profile_file"
+    printf 'Added %s.\n' "$name"
+    if [ "$#" -eq 2 ]; then
+      printf 'Complete the one-time Vercel login for %s.\n' "$name"
+      if ! invoke_vercel login; then
+        printf "vcm: login was not completed; retry with 'vcm login %s'.\n" "$name" >&2
+        exit 1
+      fi
+    fi
+    select_account "$name"
+    ;;
+  login)
+    [ "$#" -le 2 ] || die 'usage: vcm login [NAME]'
+    if [ "$#" -eq 2 ]; then
+      read_profile "$2"
+    else
+      selected_account
+    fi
+    run_vercel login
+    ;;
+  use)
+    [ "$#" -ge 2 ] && [ "$#" -le 3 ] || die 'usage: vcm use NAME [TEAM]'
+    read_profile "$2"
+    if [ "$#" -eq 3 ]; then
+      invoke_vercel switch "$3"
+    fi
+    select_account "$2"
+    ;;
+  list)
+    [ "$#" -eq 1 ] || die 'usage: vcm list'
+    if [ ! -d "$profiles_dir" ]; then
+      printf 'No accounts registered. Run: vcm add NAME\n'
+      exit 0
+    fi
+    current=
+    if [ -f "$active_file" ]; then
+      IFS= read -r current < "$active_file" || true
+    fi
+    found=0
+    for file in "$profiles_dir"/*; do
+      [ -f "$file" ] || continue
+      found=1
+      name=${file##*/}
+      IFS= read -r dir < "$file" || die "cannot read account '$name'"
+      [ "$dir" != :default: ] || dir='existing Vercel login'
+      marker=' '
+      [ "$name" != "$current" ] || marker='*'
+      printf '%s %-16s %s\n' "$marker" "$name" "$dir"
+    done
+    [ "$found" -ne 0 ] || printf 'No accounts registered. Run: vcm add NAME\n'
+    ;;
+  current)
+    [ "$#" -eq 1 ] || die 'usage: vcm current'
+    selected_account
+    printf '%s\n' "$account"
+    ;;
+  teams)
+    [ "$#" -eq 1 ] || die 'usage: vcm teams'
+    selected_account
+    run_vercel teams list
+    ;;
+  team)
+    [ "$#" -le 2 ] || die 'usage: vcm team [TEAM]'
+    selected_account
+    if [ "$#" -eq 2 ]; then
+      run_vercel switch "$2"
+    else
+      run_vercel switch
+    fi
+    ;;
+  help|--help|-h|'')
+    usage
+    ;;
+  --)
+    shift
+    [ "$#" -gt 0 ] || die 'missing Vercel command after --'
+    selected_account
+    run_vercel "$@"
+    ;;
+  *)
+    selected_account
+    run_vercel "$@"
+    ;;
+esac
