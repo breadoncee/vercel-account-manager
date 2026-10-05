@@ -1,7 +1,7 @@
 {
   "name": "vercel-account-manager",
   "version": "0.1.0",
-  "description": "Switch between Vercel CLI accounts and teams",
+  "description": "Switch Vercel CLI accounts and teams with project-specific defaults",
   "bin": {
     "vcm": "bin/vcm"
   },

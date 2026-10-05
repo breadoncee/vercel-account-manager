@@ -1,6 +1,6 @@
 # vcm
 
-`vcm` is a small account and team manager for the [Vercel CLI](https://vercel.com/docs/cli). It gives separate Vercel logins names, remembers the selected account, and passes other commands through to Vercel. Team switching uses Vercel's own `switch` command within the selected account.
+`vcm` is a small account and team manager for the [Vercel CLI](https://vercel.com/docs/cli). It gives separate Vercel logins names, remembers a global default account, and can pin an account and team to a project.
 
 ## Install with npm
 
@@ -37,7 +37,7 @@ If you are already logged in with the Vercel CLI, register that login without au
 vcm add personal --default
 ```
 
-Add another account with a one-time login. The new account is selected when login completes:
+Add another account with a one-time login. The new account becomes the global default when login completes:
 
 ```sh
 vcm add work
@@ -51,29 +51,64 @@ vcm add work "$HOME/.config/vercel-work"
 
 Use `vcm login work` if you need to refresh that account's login later.
 
-## Switch accounts and teams
+## Use an account and team for a project
+
+From the project directory, run:
 
 ```sh
-vcm list                    # Show saved accounts; * marks the selected one
-vcm use personal            # Switch accounts
-vcm current                 # Print the selected account name
+vcm use work my-team
+vcm status
+vcm deploy
+```
+
+`vcm use` writes `.vcmrc` in the current directory:
+
+```text
+account=work
+team=my-team
+```
+
+Commands run in that directory or its subdirectories use this account and team automatically. The closest `.vcmrc` wins. The file contains only an account name and team slug, not credentials. Commit it if your collaborators use the same account names; otherwise add `.vcmrc` to that project's `.gitignore`.
+
+Remove the project's `.vcmrc` when you want it to use the global fallback again.
+
+Project team selection is passed to Vercel as `--scope` for each command, so it does not change the account's global team. Explicit `--scope` or `--team` flags on a command take precedence. An account can also be pinned without a team using `vcm use work`; in that case Vercel's default team for that account applies.
+
+## Set the global fallback
+
+Outside projects with a `.vcmrc`, `vcm` uses the global default account. Set it from anywhere with:
+
+```sh
+vcm use --global personal
+vcm use --global work my-team
+```
+
+When a team is given with `--global`, `vcm` uses Vercel's `switch` command to save that team for the account. Each account retains its own global team selection.
+
+## Other commands
+
+```sh
+vcm list                    # Show saved accounts; * marks the global default
+vcm current                 # Print the effective account name
+vcm current --global        # Print the global default account name
+vcm status                  # Show effective account, team, and config source
 vcm whoami                  # Ask Vercel which user is logged in
 
-vcm teams                   # List teams on the selected account
+vcm teams                   # List teams on the effective account
+vcm team my-team            # Change the current project's team, or global team outside a project
+vcm team --global my-team   # Change the global default account's team
 vcm team                    # Choose a team interactively
-vcm team my-team            # Switch directly to a team
-vcm use work my-team        # Switch account and team together
 
 vcm deploy                  # Pass any other command to Vercel
 ```
 
-Each account retains its own team selection. Vercel saves the selected team in that account's [global CLI configuration](https://vercel.com/docs/project-configuration/global-configuration).
+Vercel saves a globally selected team in that account's [global CLI configuration](https://vercel.com/docs/project-configuration/global-configuration).
 
 When working in an already linked project, check its local `.vercel/project.json` before deploying. The [project link](https://vercel.com/docs/cli/project-linking) identifies a specific Vercel project and organization; changing accounts does not change that link.
 
 ## Where data is stored
 
-`vcm` stores account names and its selected account under `~/.config/vcm`. New account logins are saved in separate Vercel config directories below that location. Set `VCM_HOME` to use a different directory. Existing installations using the earlier `vercel-account-switcher` or `vercel-account-manager` directories are read automatically.
+`vcm` stores account names and its global default account under `~/.config/vcm`. New account logins are saved in separate Vercel config directories below that location. Set `VCM_HOME` to use a different directory. Existing installations using the earlier `vercel-account-switcher` or `vercel-account-manager` directories are read automatically.
 
 Authentication files stay in your user config directory, outside this repository. The installer only copies the script.
 
