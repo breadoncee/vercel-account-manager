@@ -23,6 +23,8 @@ You can run the script from the clone with `./bin/vcm`. The test suite uses a fa
 
 Keep the CLI compatible with the supported POSIX shell. Do not commit authentication files, access tokens, or real Vercel configuration directories. Tests should use temporary directories and fake credentials.
 
+The README animation is generated on macOS with `swift scripts/render-readme-demo.swift`. Commit the updated `assets/demo.gif` if you change its source.
+
 ## Releases
 
 Maintainers handle version changes, npm publication, and GitHub releases. Release tags use `v` followed by the package version, such as `v0.1.1`.

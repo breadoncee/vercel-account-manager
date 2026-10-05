@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 112 112" role="img" aria-labelledby="title desc">
+  <title id="title">vcm logo</title>
+  <desc id="desc">Three account cards with the front card selected</desc>
+  <defs>
+    <linearGradient id="base" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#18263b"/>
+      <stop offset="1" stop-color="#0b1220"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#77e4cb"/>
+      <stop offset="1" stop-color="#2cbca8"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="108" height="108" rx="26" fill="url(#base)" stroke="#33465d" stroke-width="2"/>
+  <rect x="29" y="22" width="59" height="49" rx="10" fill="#18263b" stroke="#496076" stroke-width="2"/>
+  <rect x="21" y="31" width="59" height="49" rx="10" fill="#20314a" stroke="#647a8d" stroke-width="2"/>
+  <rect x="13" y="40" width="59" height="49" rx="10" fill="#203a46" stroke="url(#accent)" stroke-width="3"/>
+  <circle cx="31" cy="58" r="6" fill="url(#accent)"/>
+  <path d="M22 75c1-7 5-10 9-10s8 3 9 10" fill="none" stroke="#a9f1de" stroke-width="3" stroke-linecap="round"/>
+  <path d="m49 63 5 5 9-11" fill="none" stroke="#a9f1de" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

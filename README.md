@@ -1,23 +1,65 @@
-# vcm
+<p align="center">
+  <img src="https://raw.githubusercontent.com/breadoncee/vercel-account-manager/main/assets/logo.svg" width="96" height="96" alt="vcm logo: a stack of account cards with one selected">
+</p>
 
-`vcm` is a small account and team manager for the [Vercel CLI](https://vercel.com/docs/cli). It gives separate Vercel logins names, remembers a global default account, and can pin an account and team to a project.
+<h1 align="center">vcm</h1>
 
-## Install with npm
+<p align="center"><strong>One Vercel CLI. Multiple accounts and teams. The right one for every project.</strong></p>
 
-Install the [Vercel CLI](https://vercel.com/docs/cli) first, then install [`vercel-account-manager` from npm](https://www.npmjs.com/package/vercel-account-manager):
+<p align="center">
+  <a href="https://www.npmjs.com/package/vercel-account-manager">npm package</a> ·
+  <a href="https://github.com/breadoncee/vercel-account-manager/releases">releases</a> ·
+  <a href="LICENSE">MIT license</a>
+</p>
+
+`vcm` gives each [Vercel CLI](https://vercel.com/docs/cli) login a name, remembers a global default, and lets a project select its own account and team. Run Vercel commands through `vcm` to use the selected context.
+
+## Quick start
+
+Install the Vercel CLI and [`vercel-account-manager` from npm](https://www.npmjs.com/package/vercel-account-manager):
 
 ```sh
 npm install -g vercel
 npm install -g vercel-account-manager
 ```
 
-The package exposes the `vcm` command on macOS and Linux. You can also install directly from [GitHub](https://github.com/breadoncee/vercel-account-manager) with `npm install -g github:breadoncee/vercel-account-manager`.
+If you are already logged in to Vercel, keep that login as `personal`. Add a second account with a one-time login, then choose the default and pin a team to a project:
+
+```sh
+vcm add personal --default
+vcm add work
+vcm use --global personal
+
+cd my-project
+vcm use work my-team
+vcm status
+vcm deploy
+```
+
+The package exposes `vcm` on macOS and Linux. Replace `work`, `my-team`, and `my-project` with your names.
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/breadoncee/vercel-account-manager/main/assets/demo.gif" width="960" alt="Three-step demo: select a global personal account, pin work and a team to a project, then check status">
+</p>
+
+The project selection lives in `.vcmrc`. Other projects keep using your global default.
+
+## How selection works
+
+| Where you run a command | Account and team used |
+| --- | --- |
+| In a project with `.vcmrc` | The account and optional team in the closest `.vcmrc` |
+| Elsewhere | The global default account and that account's Vercel CLI default team |
+
+An explicit `--scope` or `--team` on a Vercel command takes precedence over a project's team setting.
 
 ## Install from a clone
 
 Clone this repository and run:
 
 ```sh
+git clone https://github.com/breadoncee/vercel-account-manager.git
+cd vercel-account-manager
 ./install.sh
 ```
 
@@ -29,7 +71,7 @@ export PATH="$HOME/.local/bin:$PATH"
 
 To update a previous installation after pulling changes, run `./install.sh --force`. Set `VCM_INSTALL_DIR` to an absolute path if you prefer a different installation directory.
 
-## Add accounts
+## Manage accounts
 
 If you are already logged in with the Vercel CLI, register that login without authenticating again:
 
@@ -51,7 +93,7 @@ vcm add work "$HOME/.config/vercel-work"
 
 Use `vcm login work` if you need to refresh that account's login later.
 
-## Use an account and team for a project
+## Pin an account and team to a project
 
 From the project directory, run:
 
@@ -72,7 +114,7 @@ Commands run in that directory or its subdirectories use this account and team a
 
 Remove the project's `.vcmrc` when you want it to use the global fallback again.
 
-Project team selection is passed to Vercel as `--scope` for each command, so it does not change the account's global team. Explicit `--scope` or `--team` flags on a command take precedence. An account can also be pinned without a team using `vcm use work`; in that case Vercel's default team for that account applies.
+Project team selection is passed to Vercel as `--scope` for each command, so it does not change the account's global team. An account can also be pinned without a team using `vcm use work`; in that case Vercel's default team for that account applies.
 
 ## Set the global fallback
 
